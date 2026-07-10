@@ -1,0 +1,38 @@
+{
+  "accuracy": 0.9962,
+  "feature_names": [
+    "session_duration_min",
+    "action_count",
+    "click_interval_ms",
+    "scroll_variance",
+    "skip_rate",
+    "mouse_movement_score",
+    "typing_rhythm_variance",
+    "browser_headless"
+  ],
+  "feature_importances": [
+    0.009135990566879183,
+    0.16952053686914106,
+    0.2749081339852227,
+    0.11530334401498976,
+    0.27284699465889883,
+    0.0038573984131920922,
+    0.13878638725804088,
+    0.0156412142336355
+  ],
+  "confusion_matrix": [
+    [
+      172,
+      0
+    ],
+    [
+      1,
+      87
+    ]
+  ],
+  "anomaly_model": {
+    "type": "IsolationForest",
+    "contamination": 0.25,
+    "agreement_with_labels": 0.7885
+  }
+}

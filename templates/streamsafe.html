@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>StreamSafe</title>
+  <style>
+    * { padding: 0; margin: 0; box-sizing: border-box; }
+    body { background-color: #121212; font-family: 'Montserrat', sans-serif; }
+
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: 196px; background-color: #000; padding: 24px;
+    }
+    .sidebar .logo {
+      color: #1db954; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+    }
+    .sidebar .navigation ul { list-style: none; margin-top: 20px; }
+    .sidebar .navigation ul li { padding: 10px 0; }
+    .sidebar .navigation ul li a {
+      color: #b3b3b3; text-decoration: none; font-weight: bold; font-size: 13px;
+    }
+    .sidebar .navigation ul li a:hover { color: #fff; }
+    .sidebar .policies { position: absolute; bottom: 100px; }
+    .sidebar .policies ul { list-style: none; }
+    .sidebar .policies ul li { padding-bottom: 5px; }
+    .sidebar .policies ul li a {
+      color: #b3b3b3; font-weight: 500; text-decoration: none; font-size: 10px;
+    }
+
+    .main-container { margin-left: 220px; margin-bottom: 100px; }
+
+    .topbar {
+      display: flex; justify-content: space-between;
+      background-color: #101010; padding: 14px 30px; align-items: center;
+    }
+    .topbar .navbar { display: flex; align-items: center; gap: 20px; }
+    .topbar .navbar a { color: #b3b3b3; text-decoration: none; font-weight: bold; font-size: 13px; }
+    .topbar .navbar a:hover { color: #fff; }
+    .topbar .navbar button {
+      background-color: #fff; color: #000; font-size: 14px; font-weight: bold;
+      padding: 10px 24px; border: 0; border-radius: 40px; cursor: pointer;
+    }
+
+    .search-bar { padding: 16px 40px 0; }
+    .search-bar input {
+      width: 100%; max-width: 400px;
+      background: #242424; border: 1px solid #333;
+      border-radius: 24px; padding: 10px 18px;
+      color: #fff; font-size: 13px;
+      font-family: 'Montserrat', sans-serif;
+      outline: none; transition: border 0.2s;
+    }
+    .search-bar input:focus { border-color: #fff; }
+    .search-bar input::placeholder { color: #b3b3b3; }
+
+    .now-playing-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 40px;
+      background: rgba(29, 185, 84, 0.05);
+      border-bottom: 1px solid rgba(29, 185, 84, 0.1);
+      margin-top: 12px;
+    }
+    .now-playing-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 1.5px; color: #1db954;
+    }
+    .now-playing-dot {
+      color: #1db954; font-size: 8px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .now-playing-title { font-size: 13px; color: #fff; font-weight: 600; }
+
+    .section { padding: 20px 40px; }
+    .section h2 { color: #fff; font-size: 22px; margin-bottom: 20px; }
+
+    .list {
+      display: flex; gap: 16px; overflow-x: auto; flex-wrap: nowrap;
+      padding-bottom: 10px;
+    }
+    .list::-webkit-scrollbar { height: 4px; }
+    .list::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+    .item {
+      min-width: 160px; width: 160px; max-width: 160px; flex-shrink: 0;
+      padding: 14px; background-color: #181818; border-radius: 8px; cursor: pointer;
+      transition: background 0.3s;
+    }
+    .item:hover { background-color: #252525; }
+
+    .song-thumb {
+      width: 100%; height: 130px;
+      background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+      border-radius: 6px; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+    }
+
+    .item h4 {
+      color: #fff; font-size: 13px; margin-bottom: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item p {
+      color: #989898; font-size: 11px; line-height: 18px; margin-bottom: 10px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    .song-controls { display: flex; gap: 6px; margin-top: 8px; }
+    .btn-play, .btn-skip {
+      flex: 1; padding: 6px 0; border: none; border-radius: 20px;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .btn-play { background-color: #1db954; color: #000; }
+    .btn-play:hover { background-color: #1ed760; }
+    .btn-skip { background-color: #333; color: #fff; }
+    .btn-skip:hover { background-color: #444; }
+
+    /* ── Player Bar ── */
+    .player-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 72px; background: #181818;
+      border-top: 1px solid #282828;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 24px; z-index: 100;
+    }
+    .player-left {
+      display: flex; align-items: center;
+      gap: 12px; width: 250px;
+    }
+    .player-thumb {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #1db954, #191414);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .player-song {
+      color: #fff; font-size: 13px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .player-artist { color: #b3b3b3; font-size: 11px; margin-top: 2px; }
+
+    .player-center {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      flex: 1; max-width: 500px;
+    }
+    .player-controls {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .ctrl-btn {
+      background: none; border: none; color: #b3b3b3;
+      font-size: 18px; cursor: pointer; padding: 4px;
+      transition: color 0.2s;
+    }
+    .ctrl-btn:hover { color: #fff; }
+    .ctrl-play {
+      width: 36px; height: 36px;
+      background: #fff !important;
+      border-radius: 50%;
+      color: #000 !important;
+      font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border: none;
+    }
+    .ctrl-play:hover { transform: scale(1.05); background: #f0f0f0 !important; }
+
+    .player-progress {
+      display: flex; align-items: center;
+      gap: 10px; width: 100%;
+    }
+    .player-time { color: #b3b3b3; font-size: 11px; min-width: 32px; }
+    .progress-bar {
+      flex: 1; height: 4px; background: #535353;
+      border-radius: 2px; overflow: hidden; cursor: pointer;
+    }
+    .progress-fill {
+      height: 100%; background: #1db954;
+      border-radius: 2px; width: 0%;
+      transition: width 0.5s linear;
+    }
+    .player-right {
+      display: flex; align-items: center;
+      gap: 10px; width: 150px; justify-content: flex-end;
+    }
+    .volume-slider { width: 80px; accent-color: #1db954; cursor: pointer; }
+
+    /* Live bot score indicator */
+    #bot-indicator {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      background: #181818; border: 1px solid #333; border-radius: 20px;
+      padding: 6px 16px; font-size: 12px; color: #b3b3b3;
+      z-index: 999; display: flex; align-items: center; gap: 8px;
+    }
+    #bot-score-live { font-weight: 800; font-size: 14px; color: #1db954; }
+    .indicator-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #1db954;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">🎵 StreamSafe</div>
+  <div class="navigation">
+    <ul>
+      <li><a href="#">🏠 Home</a></li>
+      <li><a href="#">🔍 Search</a></li>
+      <li><a href="#">📚 Your Library</a></li>
+      <li><a href="#">➕ Create Playlist</a></li>
+      <li><a href="#">❤️ Liked Songs</a></li>
+    </ul>
+  </div>
+  <div class="policies">
+    <ul>
+      <li><a href="#">Cookies</a></li>
+      <li><a href="#">Privacy</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Live Bot Score Indicator -->
+<div id="bot-indicator">
+  <div class="indicator-dot"></div>
+  <span id="indicator-text">Collecting behavior data...</span>
+  <span id="bot-score-live"></span>
+</div>
+
+<div class="main-container">
+  <div class="topbar">
+    <div style="color:#1db954;font-weight:800;font-size:16px;">🎵 StreamSafe</div>
+    <div class="navbar">
+      <a href="#">Premium</a>
+      <a href="#">Support</a>
+      <a href="#">Download</a>
+      <span style="color:#fff;">|</span>
+      <a href="#">Sign Up</a>
+      <button type="button">Log In</button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="🔍  Search songs, playlists..."
+      oninput="filterSongs(this.value)"
+    />
+  </div>
+
+  <!-- Now Playing -->
+  <div class="now-playing-bar">
+    <span class="now-playing-label">NOW PLAYING</span>
+    <span class="now-playing-dot">●</span>
+    <span class="now-playing-title" id="now-playing-title">No song selected</span>
+  </div>
+
+  <!-- StreamSafe Playlists -->
+  <div class="section">
+    <h2>StreamSafe Playlists</h2>
+    <div class="list">
+      <div class="item" data-song="Todays Top Hits">
+        <div class="song-thumb">🎵</div>
+        <h4>Today's Top Hits</h4>
+        <p>The biggest songs right now</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="RapCaviar">
+        <div class="song-thumb">🎤</div>
+        <h4>RapCaviar</h4>
+        <p>New Music from top artists</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="All Out 2010s">
+        <div class="song-thumb">📻</div>
+        <h4>All Out 2010s</h4>
+        <p>The biggest songs of the 2010s</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Rock Classics">
+        <div class="song-thumb">🎸</div>
+        <h4>Rock Classics</h4>
+        <p>Rock Legends and epic songs</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Chill Hits">
+        <div class="song-thumb">🌊</div>
+        <h4>Chill Hits</h4>
+        <p>Kick back to the best chill tracks</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Viva Latino">
+        <div class="song-thumb">💃</div>
+        <h4>Viva Latino</h4>
+        <p>Today's top Latin hits</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Mega Hit Mix">
+        <div class="song-thumb">🔥</div>
+        <h4>Mega Hit Mix</h4>
+        <p>75 favorites from the last decade</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="All Out 80s">
+        <div class="song-thumb">🕺</div>
+        <h4>All Out 80s</h4>
+        <p>The biggest songs of the 1980s</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus -->
+  <div class="section">
+    <h2>Focus</h2>
+    <div class="list">
+      <div class="item" data-song="Peaceful Piano">
+        <div class="song-thumb">🎹</div>
+        <h4>Peaceful Piano</h4>
+        <p>Relax with beautiful piano pieces</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Deep Focus">
+        <div class="song-thumb">🧘</div>
+        <h4>Deep Focus</h4>
+        <p>Ambient and post-rock for focus</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Instrumental Study">
+        <div class="song-thumb">📖</div>
+        <h4>Instrumental Study</h4>
+        <p>Soft study music in the background</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Lofi Study Beats">
+        <div class="song-thumb">☕</div>
+        <h4>Lofi Study Beats</h4>
+        <p>The perfect study beats, 24/7</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Coding Mode">
+        <div class="song-thumb">💻</div>
+        <h4>Coding Mode</h4>
+        <p>Dedicated to all the programmers</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Focus Flow">
+        <div class="song-thumb">⚡</div>
+        <h4>Focus Flow</h4>
+        <p>Uptempo instrumental hip hop beats</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mood -->
+  <div class="section">
+    <h2>Mood</h2>
+    <div class="list">
+      <div class="item" data-song="Mood Booster">
+        <div class="song-thumb">😊</div>
+        <h4>Mood Booster</h4>
+        <p>Get happy with feel-good songs</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Feelin Good">
+        <div class="song-thumb">✨</div>
+        <h4>Feelin' Good</h4>
+        <p>Positively timeless classics</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Dark and Stormy">
+        <div class="song-thumb">⛈️</div>
+        <h4>Dark & Stormy</h4>
+        <p>Beautifully dark dramatic tracks</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Feel Good Piano">
+        <div class="song-thumb">🌅</div>
+        <h4>Feel Good Piano</h4>
+        <p>Happy vibes for an upbeat morning</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Feelin Myself">
+        <div class="song-thumb">💪</div>
+        <h4>Feelin' Myself</h4>
+        <p>Hip-hop playlist that's a whole mood</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="item" data-song="Chill Tracks">
+        <div class="song-thumb">🌙</div>
+        <h4>Chill Tracks</h4>
+        <p>Softer kinda dance vibes</p>
+        <div class="song-controls">
+          <button class="btn-play" onclick="playSong(this)">▶ Play</button>
+          <button class="btn-skip" onclick="skipSong(this)">⏭ Skip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Music Player Bar -->
+<div class="player-bar">
+  <div class="player-left">
+    <div class="player-thumb">🎵</div>
+    <div class="player-info">
+      <div class="player-song" id="player-song-name">No song playing</div>
+      <div class="player-artist" id="player-artist">StreamSafe</div>
+    </div>
+  </div>
+
+  <div class="player-center">
+    <div class="player-controls">
+      <button class="ctrl-btn" onclick="playerPrev()">⏮</button>
+      <button class="ctrl-btn ctrl-play" id="play-pause-btn" onclick="playerPlayPause()">▶</button>
+      <button class="ctrl-btn" onclick="playerNext()">⏭</button>
+    </div>
+    <div class="player-progress">
+      <span class="player-time" id="player-current">0:00</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <span class="player-time">3:30</span>
+    </div>
+  </div>
+
+  <div class="player-right">
+    <span style="font-size:12px;color:#b3b3b3;">🔊</span>
+    <input type="range" class="volume-slider" value="80" />
+  </div>
+</div>
+
+<script>
+// ── Behavioral Tracker ──
+const tracker = {
+  startTime: Date.now(),
+  clicks: [],
+  scrollDeltas: [],
+  mousePositions: [],
+  songSkips: 0,
+  songPlays: 0,
+  actionCount: 0,
+  sessionId: 'SS-' + Math.random().toString(36).substr(2, 8).toUpperCase()
+}
+
+// Track clicks
+document.addEventListener('click', () => {
+  tracker.clicks.push(Date.now())
+  tracker.actionCount++
+})
+
+// Track scroll
+document.addEventListener('wheel', (e) => {
+  tracker.scrollDeltas.push(Math.abs(e.deltaY))
+  if (tracker.scrollDeltas.length % 5 === 0) tracker.actionCount++
+})
+
+// Track mouse movement (sampled every 200ms)
+let lastMouseSample = 0
+document.addEventListener('mousemove', (e) => {
+  const now = Date.now()
+  if (now - lastMouseSample > 200) {
+    tracker.mousePositions.push({ x: e.clientX, y: e.clientY })
+    lastMouseSample = now
+  }
+})
+
+// ── Player State ──
+const songs = [
+  "Today's Top Hits", "RapCaviar", "All Out 2010s", "Rock Classics",
+  "Chill Hits", "Viva Latino", "Mega Hit Mix", "All Out 80s",
+  "Peaceful Piano", "Deep Focus", "Coding Mode", "Mood Booster",
+  "Feelin' Good", "Dark & Stormy", "Chill Tracks"
+]
+let currentSongIndex = 0
+let isPlaying = false
+let progressInterval = null
+let progressValue = 0
+
+function loadSong(name) {
+  document.getElementById('player-song-name').textContent = name
+  document.getElementById('player-artist').textContent = 'StreamSafe Music'
+  document.getElementById('now-playing-title').textContent = name
+  progressValue = 0
+  document.getElementById('progress-fill').style.width = '0%'
+  document.getElementById('player-current').textContent = '0:00'
+}
+
+function playerPlayPause() {
+  const btn = document.getElementById('play-pause-btn')
+  if (isPlaying) {
+    isPlaying = false
+    btn.innerHTML = '▶'
+    clearInterval(progressInterval)
+  } else {
+    isPlaying = true
+    btn.innerHTML = '⏸'
+    tracker.songPlays++
+    tracker.actionCount++
+    progressInterval = setInterval(() => {
+      progressValue += (100 / 210)
+      if (progressValue >= 100) {
+        playerNext()
+        return
+      }
+      document.getElementById('progress-fill').style.width = progressValue + '%'
+      const elapsed = Math.floor((progressValue / 100) * 210)
+      const m = Math.floor(elapsed / 60)
+      const s = elapsed % 60
+      document.getElementById('player-current').textContent =
+        `${m}:${s.toString().padStart(2, '0')}`
+    }, 1000)
+  }
+}
+
+function playerNext() {
+  tracker.songSkips++
+  tracker.actionCount++
+  clearInterval(progressInterval)
+  isPlaying = false
+  document.getElementById('play-pause-btn').innerHTML = '▶'
+  currentSongIndex = (currentSongIndex + 1) % songs.length
+  loadSong(songs[currentSongIndex])
+}
+
+function playerPrev() {
+  tracker.actionCount++
+  clearInterval(progressInterval)
+  isPlaying = false
+  document.getElementById('play-pause-btn').innerHTML = '▶'
+  currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length
+  loadSong(songs[currentSongIndex])
+}
+
+// Song card interactions
+function playSong(btn) {
+  tracker.songPlays++
+  tracker.actionCount++
+  const item = btn.closest('.item')
+  const name = item.getAttribute('data-song')
+  if (isPlaying) {
+    clearInterval(progressInterval)
+    isPlaying = false
+  }
+  loadSong(name)
+  playerPlayPause()
+}
+
+function skipSong(btn) {
+  tracker.songSkips++
+  tracker.actionCount++
+}
+
+function filterSongs(query) {
+  tracker.actionCount++
+  const q = query.toLowerCase().trim()
+  const items = document.querySelectorAll('.item')
+  items.forEach(item => {
+    const name = item.getAttribute('data-song') || ''
+    const title = item.querySelector('h4') ? item.querySelector('h4').textContent : ''
+    const match = name.toLowerCase().includes(q) || title.toLowerCase().includes(q)
+    item.style.display = (q === '' || match) ? 'block' : 'none'
+  })
+}
+
+// ── Signal computation ──
+function getAvgClickInterval() {
+  if (tracker.clicks.length < 2) return 2000
+  const intervals = []
+  for (let i = 1; i < tracker.clicks.length; i++) {
+    intervals.push(tracker.clicks[i] - tracker.clicks[i - 1])
+  }
+  return intervals.reduce((a, b) => a + b, 0) / intervals.length
+}
+
+function getScrollVariance() {
+  if (tracker.scrollDeltas.length < 2) return 0.5
+  const mean = tracker.scrollDeltas.reduce((a, b) => a + b, 0) / tracker.scrollDeltas.length
+  const variance = tracker.scrollDeltas.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / tracker.scrollDeltas.length
+  return Math.min(1.0, Math.sqrt(variance) / 50)
+}
+
+function getMouseScore() {
+  if (tracker.mousePositions.length < 3) return 0.5
+  let directionChanges = 0
+  for (let i = 2; i < tracker.mousePositions.length; i++) {
+    const dx1 = tracker.mousePositions[i-1].x - tracker.mousePositions[i-2].x
+    const dy1 = tracker.mousePositions[i-1].y - tracker.mousePositions[i-2].y
+    const dx2 = tracker.mousePositions[i].x - tracker.mousePositions[i-1].x
+    const dy2 = tracker.mousePositions[i].y - tracker.mousePositions[i-1].y
+    const dot = dx1*dx2 + dy1*dy2
+    if (dot < 0) directionChanges++
+  }
+  const raw = directionChanges / tracker.mousePositions.length
+  return Math.min(1.0, 0.5 + raw * 2.0)
+}
+
+// ── Send to Flask ──
+async function sendToFlask() {
+  const sessionDuration = (Date.now() - tracker.startTime) / 60000
+  const skipRate = (tracker.songPlays + tracker.songSkips) > 0
+    ? tracker.songSkips / (tracker.songPlays + tracker.songSkips)
+    : 0
+
+  const payload = {
+    session_id: tracker.sessionId,
+    session_duration_min: parseFloat(sessionDuration.toFixed(2)),
+    action_count: tracker.actionCount,
+    click_interval_ms: parseFloat(getAvgClickInterval().toFixed(1)),
+    scroll_variance: parseFloat(getScrollVariance().toFixed(3)),
+    skip_rate: parseFloat(skipRate.toFixed(2)),
+    mouse_movement_score: parseFloat(getMouseScore().toFixed(2)),
+    typing_rhythm_variance: 0.3,
+    browser_headless: false,
+    platform: 'StreamSafe'
+  }
+
+  try {
+    const res = await fetch('http://localhost:5000/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    const data = await res.json()
+    const score = data.bot_score
+    const el = document.getElementById('bot-score-live')
+    el.textContent = score
+    el.style.color = score >= 65 ? '#ff4f6a' : score >= 35 ? '#f5a623' : '#1db954'
+    document.getElementById('indicator-text').textContent = 'Bot Score:'
+  } catch (e) {
+    console.log('Flask not reachable yet')
+  }
+}
+
+// Init player
+loadSong(songs[0])
+
+// Wait 2 minutes then send every 30 seconds
+setTimeout(() => {
+  sendToFlask()
+  setInterval(sendToFlask, 30000)
+}, 120000)
+</script>
+
+</body>
+</html>

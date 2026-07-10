@@ -1,0 +1,134 @@
+[
+  {
+    "timestamp": "12:39:49",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 60,
+    "anomaly_score": 100,
+    "ip_recent_count": 1,
+    "action": "CHALLENGE",
+    "reason": "Bot score elevated \u2014 CAPTCHA challenge issued"
+  },
+  {
+    "timestamp": "12:05:47",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 85,
+    "ip_recent_count": 6,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "12:05:17",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 85,
+    "ip_recent_count": 5,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "12:04:47",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 87,
+    "ip_recent_count": 4,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "12:04:17",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 87,
+    "ip_recent_count": 3,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "12:03:47",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 87,
+    "ip_recent_count": 2,
+    "action": "CHALLENGE",
+    "reason": "Bot score elevated \u2014 CAPTCHA challenge issued"
+  },
+  {
+    "timestamp": "12:03:16",
+    "session_id": "SS-4W96EM88",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 88,
+    "ip_recent_count": 1,
+    "action": "CHALLENGE",
+    "reason": "Bot score elevated \u2014 CAPTCHA challenge issued"
+  },
+  {
+    "timestamp": "11:28:04",
+    "session_id": "SS-H099DK47",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 94,
+    "ip_recent_count": 4,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "11:27:34",
+    "session_id": "SS-H099DK47",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 93,
+    "ip_recent_count": 3,
+    "action": "BLOCK",
+    "reason": "Credential-stuffing / scalping pattern: multiple high-risk sessions from same IP"
+  },
+  {
+    "timestamp": "11:27:04",
+    "session_id": "SS-H099DK47",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 93,
+    "ip_recent_count": 2,
+    "action": "CHALLENGE",
+    "reason": "Bot score elevated \u2014 CAPTCHA challenge issued"
+  },
+  {
+    "timestamp": "11:26:53",
+    "session_id": "9B90447A",
+    "ip_address": "185.220.101.19",
+    "platform": "Apple Music",
+    "bot_score": 49,
+    "anomaly_score": 64,
+    "ip_recent_count": 1,
+    "action": "ALLOW",
+    "reason": "Behavior within normal range"
+  },
+  {
+    "timestamp": "11:26:33",
+    "session_id": "SS-H099DK47",
+    "ip_address": "127.0.0.1",
+    "platform": "StreamSafe",
+    "bot_score": 70,
+    "anomaly_score": 95,
+    "ip_recent_count": 1,
+    "action": "CHALLENGE",
+    "reason": "Bot score elevated \u2014 CAPTCHA challenge issued"
+  }
+]

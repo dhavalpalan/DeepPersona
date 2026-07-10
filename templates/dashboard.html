@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeepPersona — Security Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:       #0a0d14;
+      --surface:  #111520;
+      --surface2: #181e2e;
+      --border:   #1f2940;
+      --accent:   #4f7cff;
+      --accent2:  #7b5cff;
+      --danger:   #ff4f6a;
+      --warn:     #f5a623;
+      --ok:       #27d485;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --font:     'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #fff;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(39,212,133,0.1);
+      border: 1px solid rgba(39,212,133,0.25);
+      color: var(--ok);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--ok);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-accent:hover { background: #3d6aff; color: #fff; border-color: #3d6aff; }
+    .btn-danger {
+      background: rgba(255,79,106,0.12);
+      border-color: rgba(255,79,106,0.3);
+      color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(255,79,106,0.2); }
+
+    /* ── Layout ── */
+    main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Stat Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 14px 14px 0 0;
+    }
+    .card.c-blue::before  { background: var(--accent); }
+    .card.c-red::before   { background: var(--danger); }
+    .card.c-green::before { background: var(--ok); }
+    .card.c-warn::before  { background: var(--warn); }
+    .card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .card-icon {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      font-size: 22px;
+      opacity: 0.18;
+    }
+
+    /* ── Charts Row ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .chart-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; height: 160px; }
+
+    /* ── Sessions Table ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .table-actions { display: flex; gap: 8px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead { background: var(--surface2); }
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(31,41,64,0.5);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(79,124,255,0.04); }
+    tr.flagged td { background: rgba(255,79,106,0.03); }
+    tr.flagged:hover td { background: rgba(255,79,106,0.07); }
+
+    .session-id {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* Score bar */
+    .score-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score-bar-bg {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      min-width: 60px;
+    }
+    .score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .score-num {
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* Risk badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .badge-CRITICAL { background: rgba(255,79,106,0.15); color: #ff4f6a; border: 1px solid rgba(255,79,106,0.3); }
+    .badge-HIGH     { background: rgba(245,166,35,0.15); color: #f5a623; border: 1px solid rgba(245,166,35,0.3); }
+    .badge-MEDIUM   { background: rgba(79,124,255,0.15); color: #4f7cff; border: 1px solid rgba(79,124,255,0.3); }
+    .badge-LOW      { background: rgba(39,212,133,0.1);  color: #27d485; border: 1px solid rgba(39,212,133,0.2); }
+
+    /* Mitigation action badges */
+    .badge-BLOCK     { background: rgba(255,79,106,0.15); color: #ff4f6a; border: 1px solid rgba(255,79,106,0.3); }
+    .badge-CHALLENGE { background: rgba(245,166,35,0.15); color: #f5a623; border: 1px solid rgba(245,166,35,0.3); }
+    .badge-REVIEW    { background: rgba(123,92,255,0.15); color: #7b5cff; border: 1px solid rgba(123,92,255,0.3); }
+    .badge-ALLOW     { background: rgba(39,212,133,0.1);  color: #27d485; border: 1px solid rgba(39,212,133,0.2); }
+
+    .card.c-purple::before { background: var(--accent2); }
+
+    /* Platform chip */
+    .platform {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 2px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    /* Flag icon */
+    .flag-icon { font-size: 14px; }
+
+    /* Detail row */
+    .detail-row { display: none; }
+    .detail-row.open { display: table-row; }
+    .detail-cell {
+      padding: 0 !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    .detail-inner {
+      background: var(--surface2);
+      padding: 16px 22px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    /* .signal-item { } */
+    .signal-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .signal-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .signal-value.bad  { color: var(--danger); }
+    .signal-value.warn { color: var(--warn); }
+    .signal-value.ok   { color: var(--ok); }
+
+    /* Simulate panel */
+    .sim-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sim-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+      min-width: 200px;
+    }
+    .sim-sub { font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.bot   { border-color: rgba(255,79,106,0.4); color: var(--danger); }
+    #toast.human { border-color: rgba(39,212,133,0.3); color: var(--ok); }
+
+    /* Scrollable table area */
+    .table-scroll { overflow-x: auto; }
+
+    /* Clickable rows */
+    .clickable { cursor: pointer; }
+    .clickable td:first-child::before {
+      content: '▸';
+      display: inline-block;
+      margin-right: 6px;
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .clickable.expanded td:first-child::before {
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">DeepPersona</div>
+      <div class="logo-sub">Synthetic Identity &amp; Bot Detection</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <button class="btn" onclick="resetSessions()">Reset Data</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Stat Cards -->
+  <div class="cards" id="stat-cards">
+    <div class="card c-blue">
+      <div class="card-icon">📊</div>
+      <div class="card-label">Total Sessions</div>
+      <div class="card-value" id="stat-total">—</div>
+      <div class="card-sub">Active monitoring window</div>
+    </div>
+    <div class="card c-red">
+      <div class="card-icon">🤖</div>
+      <div class="card-label">Flagged Bots</div>
+      <div class="card-value" id="stat-bots">—</div>
+      <div class="card-sub" id="stat-detection-rate">—% detection rate</div>
+    </div>
+    <div class="card c-green">
+      <div class="card-icon">👤</div>
+      <div class="card-label">Human Sessions</div>
+      <div class="card-value" id="stat-humans">—</div>
+      <div class="card-sub">Verified genuine users</div>
+    </div>
+    <div class="card c-warn">
+      <div class="card-icon">⚡</div>
+      <div class="card-label">Avg. Bot Score</div>
+      <div class="card-value" id="stat-avg">—</div>
+      <div class="card-sub">Across all sessions (0–100)</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Score Distribution</div>
+      <div class="chart-sub">Sessions by bot probability range</div>
+      <div class="chart-wrap"><canvas id="chartDist"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Threat Breakdown</div>
+      <div class="chart-sub">Flagged sessions by OWASP threat type</div>
+      <div class="chart-wrap"><canvas id="chartThreats"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Platform Exposure</div>
+      <div class="chart-sub">Session count by monitored platform</div>
+      <div class="chart-wrap"><canvas id="chartPlatform"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Model Metrics Panel -->
+<div class="charts-row" style="margin-bottom: 24px;">
+
+  <!-- Accuracy Card -->
+  <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;">
+    <div class="chart-title">Model Accuracy</div>
+    <div style="font-size:56px;font-weight:800;color:var(--ok);letter-spacing:-2px;" id="metric-accuracy">—</div>
+    <div style="font-size:12px;color:var(--muted);">Decision Tree — max depth 5</div>
+    <div style="font-size:12px;color:var(--muted);">Test set: 260 sessions</div>
+    <div style="margin-top:8px;display:flex;gap:16px;font-size:12px;">
+      <span style="color:var(--ok);">● 0 Bots Missed</span>
+      <span style="color:var(--warn);">● 3 False Alarms</span>
+    </div>
+  </div>
+
+  <!-- Feature Importance Chart -->
+  <div class="chart-card">
+    <div class="chart-title">Feature Importances</div>
+    <div class="chart-sub">Which behavioral signal catches bots most</div>
+    <div class="chart-wrap" style="height:200px;">
+      <canvas id="chartImportances"></canvas>
+    </div>
+  </div>
+
+  <!-- Confusion Matrix -->
+  <div class="chart-card">
+    <div class="chart-title">Confusion Matrix</div>
+    <div class="chart-sub">Model predictions vs actual labels</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;" id="confusion-matrix">
+      <div style="background:rgba(39,212,133,0.1);border:1px solid rgba(39,212,133,0.3);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">True Negative</div>
+        <div style="font-size:36px;font-weight:800;color:var(--ok);" id="cm-tn">—</div>
+        <div style="font-size:11px;color:var(--muted);">Humans → Human</div>
+      </div>
+      <div style="background:rgba(255,79,106,0.08);border:1px solid rgba(255,79,106,0.2);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">False Positive</div>
+        <div style="font-size:36px;font-weight:800;color:var(--danger);" id="cm-fp">—</div>
+        <div style="font-size:11px;color:var(--muted);">Humans → Bot</div>
+      </div>
+      <div style="background:rgba(255,79,106,0.08);border:1px solid rgba(255,79,106,0.2);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">False Negative</div>
+        <div style="font-size:36px;font-weight:800;color:var(--danger);" id="cm-fn">—</div>
+        <div style="font-size:11px;color:var(--muted);">Bots → Human</div>
+      </div>
+      <div style="background:rgba(39,212,133,0.1);border:1px solid rgba(39,212,133,0.3);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">True Positive</div>
+        <div style="font-size:36px;font-weight:800;color:var(--ok);" id="cm-tp">—</div>
+        <div style="font-size:11px;color:var(--muted);">Bots → Bot</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <!-- Threat Response Engine -->
+  <div class="chart-card" style="margin-bottom: 24px;">
+    <div class="chart-title">Threat Response Engine</div>
+    <div class="chart-sub">Rule-based mitigation combining bot score, IP session-velocity, and the unsupervised anomaly cross-check</div>
+    <div class="cards" style="margin-top:16px;margin-bottom:0;">
+      <div class="card c-red">
+        <div class="card-icon">⛔</div>
+        <div class="card-label">Blocked</div>
+        <div class="card-value" id="stat-blocked">—</div>
+        <div class="card-sub">Critical score or credential-stuffing pattern</div>
+      </div>
+      <div class="card c-warn">
+        <div class="card-icon">🧩</div>
+        <div class="card-label">Challenged</div>
+        <div class="card-value" id="stat-challenged">—</div>
+        <div class="card-sub">CAPTCHA issued</div>
+      </div>
+      <div class="card c-purple">
+        <div class="card-icon">🔍</div>
+        <div class="card-label">Needs Review</div>
+        <div class="card-value" id="stat-review">—</div>
+        <div class="card-sub">Anomaly detector disagrees with model</div>
+      </div>
+      <div class="card c-green">
+        <div class="card-icon">✅</div>
+        <div class="card-label">Allowed</div>
+        <div class="card-value" id="stat-allowed">—</div>
+        <div class="card-sub">Behavior within normal range</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mitigation Audit Log -->
+  <div class="table-card" style="margin-bottom: 24px;">
+    <div class="table-header">
+      <div class="table-title">Mitigation Audit Trail <span style="color:var(--muted);font-weight:400;font-size:12px;margin-left:6px">Most recent decisions, newest first</span></div>
+    </div>
+    <div class="table-scroll" style="max-height:320px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Session ID</th>
+            <th>IP Address</th>
+            <th>Bot Score</th>
+            <th>Anomaly Score</th>
+            <th>Action</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="audit-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sessions Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">Session Feed <span id="session-count" style="color:var(--muted);font-weight:400;font-size:12px;margin-left:6px"></span></div>
+      <div class="table-actions">
+        <button class="btn" onclick="filterTable('all')" id="f-all">All</button>
+        <button class="btn" onclick="filterTable('flagged')" id="f-flag">Flagged Only</button>
+        <button class="btn" onclick="filterTable('human')" id="f-human">Humans</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Session ID</th>
+            <th>Time</th>
+            <th>Platform</th>
+            <th>Bot Score</th>
+            <th>Risk Level</th>
+            <th>Threat Type</th>
+            <th>Action</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="session-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Simulate Panel -->
+  <div class="sim-panel">
+    <div class="sim-label">
+      Simulate New Session
+      <div class="sim-sub">Inject a new user session into the detection pipeline</div>
+    </div>
+    <button class="btn btn-accent" onclick="simulate(null)">Random Session</button>
+    <button class="btn btn-danger" onclick="simulate(true)">Inject Bot</button>
+    <button class="btn" style="border-color:rgba(39,212,133,0.3);color:var(--ok);" onclick="simulate(false)">Inject Human</button>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+let allSessions = [];
+let currentFilter = 'all';
+let charts = {};
+
+// ── Chart defaults ──
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+Chart.defaults.font.size = 12;
+
+function scoreColor(score) {
+  if (score >= 75) return '#ff4f6a';
+  if (score >= 55) return '#f5a623';
+  if (score >= 35) return '#4f7cff';
+  return '#27d485';
+}
+
+function buildCharts(stats) {
+  // Destroy existing
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+
+  const base = {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(31,41,64,0.8)' }, ticks: { color: '#64748b' } },
+      y: { grid: { color: 'rgba(31,41,64,0.8)' }, ticks: { color: '#64748b' } }
+    }
+  };
+
+  // Score distribution bar chart
+  const dist = stats.score_distribution;
+  charts.dist = new Chart(document.getElementById('chartDist'), {
+    type: 'bar',
+    data: {
+      labels: ['0–25 Low', '26–50 Medium', '51–75 High', '76–100 Critical'],
+      datasets: [{
+        data: [dist['0-25'], dist['26-50'], dist['51-75'], dist['76-100']],
+        backgroundColor: ['#27d48533', '#4f7cff33', '#f5a62333', '#ff4f6a33'],
+        borderColor:     ['#27d485',   '#4f7cff',   '#f5a623',   '#ff4f6a'],
+        borderWidth: 1.5,
+        borderRadius: 5,
+      }]
+    },
+    options: { ...base, plugins: { legend: { display: false } } }
+  });
+
+  // Threat doughnut
+  const threats = stats.threat_breakdown;
+  const tLabels = Object.keys(threats);
+  const tData = Object.values(threats);
+  charts.threats = new Chart(document.getElementById('chartThreats'), {
+    type: 'doughnut',
+    data: {
+      labels: tLabels.length ? tLabels : ['No threats'],
+      datasets: [{
+        data: tData.length ? tData : [1],
+        backgroundColor: ['#ff4f6a66','#f5a62366','#4f7cff66','#7b5cff66'],
+        borderColor:     ['#ff4f6a',  '#f5a623',  '#4f7cff',  '#7b5cff'],
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { color: '#64748b', font: { size: 10 }, boxWidth: 10, padding: 8 }
+        }
+      },
+      cutout: '68%',
+      layout: { padding: { bottom: 4 } }
+    }
+  });
+
+  // Platform bar chart
+  const platforms = stats.platform_breakdown;
+  charts.platform = new Chart(document.getElementById('chartPlatform'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(platforms),
+      datasets: [{
+        data: Object.values(platforms),
+        backgroundColor: '#4f7cff22',
+        borderColor: '#4f7cff',
+        borderWidth: 1.5,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      ...base,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(31,41,64,0.8)' }, ticks: { color: '#64748b' } },
+        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+function renderTable(sessions) {
+  const tbody = document.getElementById('session-tbody');
+  let filtered = sessions;
+  if (currentFilter === 'flagged') filtered = sessions.filter(s => s.flagged);
+  if (currentFilter === 'human') filtered = sessions.filter(s => !s.flagged);
+
+  document.getElementById('session-count').textContent = `(${filtered.length} sessions)`;
+
+  tbody.innerHTML = '';
+  filtered.forEach((s, idx) => {
+    const fill = scoreColor(s.bot_score);
+    const pct = s.bot_score;
+
+    // Main row
+    const tr = document.createElement('tr');
+    tr.className = `clickable${s.flagged ? ' flagged' : ''}`;
+    tr.id = `row-${s.session_id}`;
+    tr.innerHTML = `
+      <td><span class="session-id">${s.session_id}</span></td>
+      <td style="color:var(--muted)">${s.timestamp}</td>
+      <td><span class="platform">${s.platform}</span></td>
+      <td>
+        <div class="score-wrap">
+          <div class="score-bar-bg">
+            <div class="score-bar-fill" style="width:${pct}%;background:${fill}"></div>
+          </div>
+          <span class="score-num" style="color:${fill}">${pct}</span>
+        </div>
+      </td>
+      <td><span class="badge badge-${s.risk_level}">${s.risk_level}</span></td>
+      <td style="color:var(--muted);font-size:12px">${s.threat_type || '—'}</td>
+      <td><span class="badge badge-${s.mitigation_action || 'ALLOW'}">${s.mitigation_action || 'ALLOW'}</span></td>
+      <td class="flag-icon">${s.flagged ? '🚨' : '✅'}</td>
+    `;
+    tr.onclick = () => toggleDetail(s.session_id, s);
+    tbody.appendChild(tr);
+
+    // Detail row
+    const sig = s.signals;
+    const trD = document.createElement('tr');
+    trD.className = 'detail-row';
+    trD.id = `detail-${s.session_id}`;
+    trD.innerHTML = `
+      <td class="detail-cell" colspan="8">
+        <div class="detail-inner">
+          <div class="signal-item">
+            <div class="signal-label">IP Address</div>
+            <div class="signal-value ${s.is_velocity_attack ? 'bad' : ''}">${s.ip_address || '—'}${s.ip_recent_count > 1 ? ` (${s.ip_recent_count} in ${5}m)` : ''}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Anomaly Score (unsupervised)</div>
+            <div class="signal-value ${s.anomaly_score >= 65 ? 'bad' : s.anomaly_score >= 35 ? 'warn' : ''}">${s.anomaly_score ?? '—'}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Mitigation Reason</div>
+            <div class="signal-value" style="font-size:11px;line-height:1.4;">${s.mitigation_reason || '—'}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Session Duration</div>
+            <div class="signal-value ${sig.session_duration_min < 2 ? 'bad' : ''}">${sig.session_duration_min} min</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Action Count</div>
+            <div class="signal-value ${sig.action_count > 150 ? 'bad' : sig.action_count > 80 ? 'warn' : ''}">${sig.action_count}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Avg Click Interval</div>
+            <div class="signal-value ${sig.avg_click_interval_ms < 200 ? 'bad' : ''}">${sig.avg_click_interval_ms} ms</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Scroll Variance</div>
+            <div class="signal-value ${sig.scroll_variance < 0.1 ? 'bad' : ''}">${sig.scroll_variance}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Skip Rate</div>
+            <div class="signal-value ${sig.skip_rate > 0.7 ? 'bad' : ''}">${(sig.skip_rate * 100).toFixed(0)}%</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Headless Browser</div>
+            <div class="signal-value ${sig.browser_headless ? 'bad' : 'ok'}">${sig.browser_headless ? 'DETECTED' : 'No'}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Mouse Movement</div>
+            <div class="signal-value ${sig.mouse_movement_score < 0.2 ? 'bad' : ''}">${sig.mouse_movement_score}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Typing Rhythm</div>
+            <div class="signal-value ${sig.typing_rhythm_variance < 0.05 ? 'bad' : ''}">${sig.typing_rhythm_variance}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">CAPTCHA Solved</div>
+            <div class="signal-value ${sig.captcha_solved ? 'ok' : 'warn'}">${sig.captcha_solved ? 'Yes' : 'No'}</div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-label">Unique IPs</div>
+            <div class="signal-value ${sig.unique_ips > 1 ? 'warn' : ''}">${sig.unique_ips}</div>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(trD);
+  });
+}
+
+function toggleDetail(id, s) {
+  const row = document.getElementById(`row-${id}`);
+  const detail = document.getElementById(`detail-${id}`);
+  const open = detail.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.detail-row.open').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('.clickable.expanded').forEach(r => r.classList.remove('expanded'));
+  if (!open) {
+    detail.classList.add('open');
+    row.classList.add('expanded');
+  }
+}
+
+function filterTable(mode) {
+  currentFilter = mode;
+  ['all','flag','human'].forEach(k => {
+    document.getElementById(`f-${k}`).style.borderColor = '';
+    document.getElementById(`f-${k}`).style.color = '';
+  });
+  const map = {all:'all', flagged:'flag', human:'human'};
+  const el = document.getElementById(`f-${map[mode]}`);
+  if (el) { el.style.borderColor = 'var(--accent)'; el.style.color = 'var(--accent)'; }
+  renderTable(allSessions);
+}
+
+async function loadData() {
+  const [sessRes, statsRes] = await Promise.all([
+    fetch('/api/sessions'),
+    fetch('/api/stats')
+  ]);
+  allSessions = await sessRes.json();
+  const stats = await statsRes.json();
+
+  document.getElementById('stat-total').textContent = stats.total_sessions;
+  document.getElementById('stat-bots').textContent = stats.flagged_bots;
+  document.getElementById('stat-humans').textContent = stats.human_sessions;
+  document.getElementById('stat-avg').textContent = stats.avg_bot_score;
+  document.getElementById('stat-detection-rate').textContent = `${stats.detection_rate}% detection rate`;
+
+  const mit = stats.mitigation_breakdown || {};
+  document.getElementById('stat-blocked').textContent = mit.BLOCK ?? 0;
+  document.getElementById('stat-challenged').textContent = mit.CHALLENGE ?? 0;
+  document.getElementById('stat-review').textContent = stats.needs_review_count ?? (mit.REVIEW ?? 0);
+  document.getElementById('stat-allowed').textContent = mit.ALLOW ?? 0;
+
+  buildCharts(stats);
+  renderTable(allSessions);
+  await loadMetrics();
+  await loadAudit();
+}
+
+async function loadAudit() {
+  const res = await fetch('/api/audit');
+  const entries = await res.json();
+  const tbody = document.getElementById('audit-tbody');
+  tbody.innerHTML = '';
+  entries.slice(0, 30).forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${e.timestamp}</td>
+      <td><span class="session-id">${e.session_id}</span></td>
+      <td style="color:var(--muted);font-size:12px">${e.ip_address}</td>
+      <td>${e.bot_score}</td>
+      <td>${e.anomaly_score ?? '—'}</td>
+      <td><span class="badge badge-${e.action}">${e.action}</span></td>
+      <td style="color:var(--muted);font-size:11px">${e.reason}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadMetrics() {
+  const res = await fetch('/api/metrics');
+  const metrics = await res.json();
+
+  // Accuracy
+  const pct = (metrics.accuracy * 100).toFixed(2) + '%';
+  document.getElementById('metric-accuracy').textContent = pct;
+
+  // Confusion matrix — [[TN, FP], [FN, TP]]
+  const cm = metrics.confusion_matrix;
+  document.getElementById('cm-tn').textContent = cm[0][0];
+  document.getElementById('cm-fp').textContent = cm[0][1];
+  document.getElementById('cm-fn').textContent = cm[1][0];
+  document.getElementById('cm-tp').textContent = cm[1][1];
+
+  // Feature importance chart
+  if (charts.importances) charts.importances.destroy();
+
+  const labels = metrics.feature_names.map(f => f.replace(/_/g, ' '));
+  const values = metrics.feature_importances;
+  const colors = values.map(v =>
+    v > 0.5 ? '#27d485' : v > 0.1 ? '#4f7cff' : '#64748b'
+  );
+
+  charts.importances = new Chart(document.getElementById('chartImportances'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.map(c => c + '33'),
+        borderColor: colors,
+        borderWidth: 1.5,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(31,41,64,0.8)' }, ticks: { color: '#64748b' } },
+        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+async function simulate(forceBot) {
+  const body = forceBot === null ? {} : { force_bot: forceBot };
+  const res = await fetch('/api/simulate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const session = await res.json();
+
+  showToast(
+    session.flagged
+      ? `🚨 Bot detected — ${session.platform} — Score: ${session.bot_score}`
+      : `✅ Human session — ${session.platform} — Score: ${session.bot_score}`,
+    session.flagged ? 'bot' : 'human'
+  );
+
+  await loadData();
+}
+
+async function resetSessions() {
+  await fetch('/api/reset', { method: 'POST' });
+  showToast('🔄 Data reset — 20 new sessions generated');
+  await loadData();
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => { t.className = ''; }, 3200);
+}
+
+// Init + auto-refresh
+loadData();
+setInterval(loadData, 10000);
+</script>
+</body>
+</html>
