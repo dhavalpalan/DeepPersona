@@ -92,10 +92,6 @@ Beyond just showing a bot score, the system now makes an actual decision and log
 - **OAT-016 Skewing** — Fake streams inflating play counts
 - **Synthetic Identity** — Fabricated accounts mimicking real users
 
-## Project Team
+## Project Developer
 
-- **Dhaval** — Project Lead, Architecture, Backend, ML Model
-- **Vishu** — Co-developer, Frontend, Dashboard
-- **Adarsh** — Research Support, Future Scope
-
-*MSc Information Technology — Cybersecurity Specialization | Parul University*
+ **Dhaval** — Project Lead, Architecture, Backend, ML Model
